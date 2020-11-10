@@ -1,5 +1,5 @@
 import { storyblokClient } from './storyblok'
-import { log, createIndex, createBulkOperations, transformId, transformStory, cacheInvalidate } from './helpers'
+import { log, createIndex, deleteIndex, createBulkOperations, transformId, transformStory, cacheInvalidate } from './helpers'
 
 function indexStories ({ db, stories = [] }) {
   const bulkOps = createBulkOperations(stories)
@@ -45,8 +45,9 @@ async function syncStories ({ db, page = 1, perPage = 100, environment = null })
 
 const fullSync = async (db, config) => {
   log('Syncing published stories!')
-  await db.indices.delete({ ignore_unavailable: true, index: 'storyblok_stories' })
-  await db.indices.create(createIndex(config))
+
+  await db.indices.delete(deleteIndex())
+  await db.indices.create(createIndex())
   await syncStories({ db, perPage: config.storyblok.perPage, environment: config.storyblok.environment })
 }
 

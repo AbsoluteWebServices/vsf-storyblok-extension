@@ -4,6 +4,36 @@ import { promisify } from 'util'
 
 const rp = promisify(request)
 
+let config
+
+export function setConfig (_config) {
+  config = _config
+
+  if (!config.storyblok.index) {
+    config.storyblok.index = 'storyblok_stories'
+  }
+
+  if (!config.storyblok.entity) {
+    config.storyblok.entity = 'story'
+  }
+}
+
+export function indexName () {
+  if (parseInt(config.elasticsearch.apiVersion) < 6) {
+    return config.storyblok.index
+  } else {
+    return `${config.storyblok.index}_${config.storyblok.entity}`
+  }
+}
+
+export function entityType () {
+  if (parseInt(config.elasticsearch.apiVersion) < 6) {
+    return config.storyblok.entity
+  } else {
+    return '_doc'
+  }
+}
+
 export function getHits (result) {
   if (result.body) { // differences between ES5 andd ES7
     return result.body.hits
@@ -25,8 +55,8 @@ export function getHitsAsStory (hits) {
 
 export const transformId = (id) => {
   return {
-    index: 'storyblok_stories',
-    type: 'story', // XXX: Change to _doc once VSF supports Elasticsearch 6
+    index: indexName(),
+    type: entityType(),
     id: id
   }
 }
@@ -44,8 +74,8 @@ function mapStoryToBulkAction ({ story: { id } }) {
   return {
     index: {
       _id: id,
-      _index: 'storyblok_stories',
-      _type: 'story'
+      _index: indexName(),
+      _type: entityType()
     }
   }
 }
@@ -61,9 +91,9 @@ export function createBulkOperations (stories = []) {
   }, [])
 }
 
-export function createIndex (config) {
+export function createIndex () {
   return {
-    index: 'storyblok_stories',
+    index: indexName(),
     body: {
       settings: {
         'index.mapping.total_fields.limit': config.storyblok.fieldLimit || 1000
@@ -72,10 +102,17 @@ export function createIndex (config) {
   }
 }
 
+export function deleteIndex () {
+  return {
+    index: indexName(),
+    ignore_unavailable: true
+  }
+}
+
 export function queryByPath (path) {
   return {
-    index: 'storyblok_stories',
-    type: 'story',
+    index: indexName(),
+    type: entityType(),
     body: {
       query: {
         constant_score: {
@@ -94,7 +131,7 @@ export const log = (string) => {
   console.log('📖 : ' + string) // eslint-disable-line no-console
 }
 
-export const cacheInvalidate = async (config) => {
+export const cacheInvalidate = async () => {
   if (config.invalidate) {
     log(`Invalidating cache... (${config.invalidate})`)
     await rp({
@@ -117,7 +154,7 @@ export const getStory = async (db, path) => {
   }
 }
 
-export const validateEditor = (config, params) => {
+export const validateEditor = (params) => {
   const { spaceId, timestamp, token } = params
 
   const validationString = `${spaceId}:${config.storyblok.previewToken}:${timestamp}`

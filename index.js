@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { apiStatus } from '../../../lib/util'
 import { getClient } from '../../../lib/elastic'
 import { fullSync, handleHook, seedDatabase } from './sync'
-import { getStory, log, cacheInvalidate, validateEditor } from './helpers'
+import { setConfig, getStory, log, cacheInvalidate, validateEditor } from './helpers'
 import { initStoryblokClient } from './storyblok'
 import protectRoute from './middleware/protectRoute'
 
@@ -13,6 +13,7 @@ module.exports = ({ config }) => {
   const db = getClient(config)
   const api = Router()
 
+  setConfig(config)
   initStoryblokClient(config)
   seedDatabase(db, config)
 
@@ -32,7 +33,7 @@ module.exports = ({ config }) => {
 
   api.get('/validate-editor', async (req, res) => {
     try {
-      const result = validateEditor(config, req.query)
+      const result = validateEditor(req.query)
       apiStatus(res, result)
     } catch (error) {
       apiStatus(res, {
