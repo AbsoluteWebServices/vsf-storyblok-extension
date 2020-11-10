@@ -23,13 +23,19 @@ export function getHitsAsStory (hits) {
   return story
 }
 
+export const transformId = (id) => {
+  return {
+    index: 'storyblok_stories',
+    type: 'story', // XXX: Change to _doc once VSF supports Elasticsearch 6
+    id: id
+  }
+}
+
 export const transformStory = ({ id, ...story } = {}) => {
   story.content = JSON.stringify(story.content)
   story.full_slug = story.full_slug.replace(/^\/|\/$/g, '')
   return {
-    index: 'storyblok_stories',
-    type: 'story', // XXX: Change to _doc once VSF supports Elasticsearch 6
-    id: id,
+    ...transformId(id),
     body: story
   }
 }

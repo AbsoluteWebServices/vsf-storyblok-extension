@@ -1,5 +1,5 @@
 import { storyblokClient } from './storyblok'
-import { log, createIndex, createBulkOperations, transformStory, cacheInvalidate } from './helpers'
+import { log, createIndex, createBulkOperations, transformId, transformStory, cacheInvalidate } from './helpers'
 
 function indexStories ({ db, stories = [] }) {
   const bulkOps = createBulkOperations(stories)
@@ -8,14 +8,20 @@ function indexStories ({ db, stories = [] }) {
   })
 }
 
-async function syncStories ({ db, page = 1, perPage = 100 }) {
+async function syncStories ({ db, page = 1, perPage = 100, environment = null }) {
   const { data: { stories }, total } = await storyblokClient.get('cdn/stories', {
     page,
     per_page: perPage,
     resolve_links: 'url'
   })
 
-  const newStories = stories.map(story => ({
+  const newStories = stories.filter(story => {
+    if (!environment) {
+      return true
+    }
+    const environments = story.tag_list.filter(tag => tag.startsWith('publish-')).map(tag => tag.replace('publish-', ''))
+    return environments.length === 0 || environments.includes(environment)
+  }).map(story => ({
     ...story,
     full_slug: story.full_slug.replace(/^\/|\/$/g, '')
   }))
@@ -26,7 +32,7 @@ async function syncStories ({ db, page = 1, perPage = 100 }) {
 
   if (page < lastPage) {
     page += 1
-    return syncStories({ db, page, perPage })
+    return syncStories({ db, page, perPage, environment })
   }
 
   return promise
@@ -36,7 +42,7 @@ const fullSync = async (db, config) => {
   log('Syncing published stories!')
   await db.indices.delete({ ignore_unavailable: true, index: 'storyblok_stories' })
   await db.indices.create(createIndex(config))
-  await syncStories({ db, perPage: config.storyblok.perPage })
+  await syncStories({ db, perPage: config.storyblok.perPage, environment: config.storyblok.environment })
 }
 
 const handleHook = async (db, config, params) => {
@@ -49,6 +55,25 @@ const handleHook = async (db, config, params) => {
         cv,
         resolve_links: 'url'
       })
+      const environment = config.storyblok.environment
+
+      if (environment) {
+        const environments = story.tag_list.filter(tag => tag.startsWith('publish-')).map(tag => tag.replace('publish-', ''))
+        if (environments.length !== 0 && !environments.includes(environment)) {
+          const searchStory = transformId(id)
+          const response = await db.exists(searchStory)
+
+          if (response.statusCode === 200) {
+            await db.delete(searchStory)
+            log(`Unpublished ${story.full_slug}`)
+            break
+          } else {
+            log(`Skipped ${story.full_slug}`)
+            return
+          }
+        }
+      }
+
       const publishedStory = transformStory(story)
 
       await db.index(publishedStory)
@@ -56,7 +81,7 @@ const handleHook = async (db, config, params) => {
       break
 
     case 'unpublished':
-      const unpublishedStory = transformStory({ id })
+      const unpublishedStory = transformId(id)
       await db.delete(unpublishedStory)
       log(`Unpublished ${id}`)
       break
