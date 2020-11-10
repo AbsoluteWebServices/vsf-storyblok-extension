@@ -21,10 +21,15 @@ async function syncStories ({ db, page = 1, perPage = 100, environment = null })
     }
     const environments = story.tag_list.filter(tag => tag.startsWith('publish-')).map(tag => tag.replace('publish-', ''))
     return environments.length === 0 || environments.includes(environment)
-  }).map(story => ({
-    ...story,
-    full_slug: story.full_slug.replace(/^\/|\/$/g, '')
-  }))
+  }).map(story => {
+    const fullSlug = story.full_slug.replace(/^\/|\/$/g, '')
+
+    return {
+      ...story,
+      full_slug: fullSlug,
+      folder: fullSlug.lastIndexOf('/') !== -1 ? fullSlug.substring(0, fullSlug.lastIndexOf('/')) : null
+    }
+  })
 
   const promise = indexStories({ db, stories: newStories })
 
