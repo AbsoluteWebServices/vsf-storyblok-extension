@@ -1,0 +1,17 @@
+{
+  "name": "@kodbruket/vsf-storyblok-extension",
+  "version": "0.0.1",
+  "description": "Vue Storefront Storyblok extension",
+  "module": "index.js",
+  "repository": "https://github.com/kodbruket/vsf-storyblok-sync.git",
+  "author": "Max Malm",
+  "license": "MIT",
+  "dependencies": {
+    "storyblok-js-client": "2.0.10"
+  },
+  "files": [
+    "hook.js",
+    "index.js",
+    "sync-stories.js"
+  ]
+}
