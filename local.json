@@ -1,0 +1,10 @@
+{
+  "storyblok": {
+    "previewToken": "PREVIEW_TOKEN",
+    "hookSecret": "secret_for_storyblok_panel",
+    "invalidate": "http://localhost:3000/invalidate?tag=storyblok&key=CACHE_KEY",
+    "environment": "dev",
+    "index": "storyblok_stories",
+    "entity": "story"
+  }
+}
