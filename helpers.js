@@ -59,12 +59,8 @@ export function createIndex (config) {
   return {
     index: 'storyblok_stories',
     body: {
-      index: {
-        mapping: {
-          total_fields: {
-            limit: config.storyblok.fieldLimit || 1000
-          }
-        }
+      settings: {
+        'index.mapping.total_fields.limit': config.storyblok.fieldLimit || 1000
       }
     }
   }
