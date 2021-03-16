@@ -27,6 +27,7 @@ async function syncStories ({ db, page = 1, perPage = 100, environment = null })
     return {
       ...story,
       full_slug: fullSlug,
+      real_path: fullSlug.substr(0, 1) === '/' ? fullSlug : `/${fullSlug}`,
       folder: fullSlug.lastIndexOf('/') !== -1 ? fullSlug.substring(0, fullSlug.lastIndexOf('/')) : null
     }
   })
