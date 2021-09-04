@@ -15,7 +15,7 @@ module.exports = ({ config }) => {
 
   setConfig(config)
   initStoryblokClient(config)
-  seedDatabase(db, config)
+  
 
   api.get('/story/', async (req, res) => {
     const story = await getStory(db, 'home')

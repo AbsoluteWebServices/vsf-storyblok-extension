@@ -47,9 +47,16 @@ async function syncStories ({ db, page = 1, perPage = 100, environment = null })
 const fullSync = async (db, config) => {
   log('Syncing published stories!')
 
-  await db.indices.delete(deleteIndex())
-  await db.indices.create(createIndex())
-  await syncStories({ db, perPage: config.storyblok.perPage, environment: config.storyblok.environment })
+  // This will call the storyblok API, load up the stories, and then return a promise to index them
+  // Tested with ngrok
+  try {
+    const indexStories = syncStories({ db, perPage: config.storyblok.perPage, environment: config.storyblok.environment })
+    await db.indices.delete(deleteIndex())
+    await db.indices.create(createIndex())
+    await indexStories
+  } catch(e) {
+    console.error(e)
+  }
 }
 
 const handleHook = async (db, config, params) => {
