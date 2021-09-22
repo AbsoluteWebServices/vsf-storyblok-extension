@@ -61,9 +61,27 @@ export const transformId = (id) => {
   }
 }
 
+export const getCacheTag = (story) => {
+  const slugParts = story.full_slug.split('/')
+  let cacheTag = ''
+
+  if (slugParts[0] === 'system') {
+    cacheTag = 'SB_SYS'
+  } else if (slugParts[0] === 'overrides' && slugParts[1].includes('brand-') && slugParts[2] === 'system') {
+    cacheTag = story.full_slug.includes('system/general')
+      ? `SB${slugParts[1].substring('brand-'.length)}`
+      : 'SB_SYS'
+  } else {
+    cacheTag = `SB${story.id}`
+  }
+
+  return cacheTag
+}
+
 export const transformStory = ({ id, ...story } = {}) => {
   story.content = JSON.stringify(story.content)
   story.full_slug = story.full_slug.replace(/^\/|\/$/g, '')
+  story.cache_tag = getCacheTag(story)
   return {
     ...transformId(id),
     body: story
@@ -131,12 +149,15 @@ export const log = (string) => {
   console.log('📖 : ' + string) // eslint-disable-line no-console
 }
 
-export const cacheInvalidate = async () => {
+export const cacheInvalidate = async (config, story = null) => {
   if (config.invalidate) {
+    const url = config.invalidate
+    if (story && story.cache_tag) {
+      const queryParams = new URLSearchParams(url)
+      queryParams.set('tag', story.cache_tag)
+    }
     log(`Invalidating cache... (${config.invalidate})`)
-    await rp({
-      uri: config.invalidate
-    })
+    await rp({ uri: url })
     log('Invalidated cache ✅')
   }
 }
