@@ -62,20 +62,7 @@ export const transformId = (id) => {
 }
 
 export const getCacheTag = (story) => {
-  const slugParts = story.full_slug.split('/')
-  let cacheTag = ''
-
-  if (slugParts[0] === 'system') {
-    cacheTag = 'SB_SYS'
-  } else if (slugParts[0] === 'overrides' && slugParts[1].includes('brand-') && slugParts[2] === 'system') {
-    cacheTag = story.full_slug.includes('system/general')
-      ? `SB${slugParts[1].substring('brand-'.length)}`
-      : 'SB_SYS'
-  } else {
-    cacheTag = `SB${story.id}`
-  }
-
-  return cacheTag
+  return story.id ? `SB${story.id}` : ''
 }
 
 export const transformStory = ({ id, ...story } = {}) => {
