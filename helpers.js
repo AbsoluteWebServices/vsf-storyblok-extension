@@ -65,12 +65,12 @@ export const getCacheTag = (story) => {
   return story.id ? `SB${story.id}` : ''
 }
 
-export const transformStory = ({ id, ...story } = {}) => {
+export const transformStory = (story = {}) => {
   story.content = JSON.stringify(story.content)
   story.full_slug = story.full_slug.replace(/^\/|\/$/g, '')
   story.cache_tag = getCacheTag(story)
   return {
-    ...transformId(id),
+    ...transformId(story.id),
     body: story
   }
 }
