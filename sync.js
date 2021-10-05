@@ -69,7 +69,7 @@ const fullSync = async (db, config) => {
   }
 }
 
-const handleHook = async (db, config, params) => {
+const handleHook = async (db, config, params, invalidate) => {
   const cv = Date.now() // bust cache
   const { story_id: id, action } = params
   let invalidatedStory = null
@@ -118,7 +118,9 @@ const handleHook = async (db, config, params) => {
     default:
       break
   }
-  await cacheInvalidate(config.storyblok, invalidatedStory)
+  if (invalidate) {
+    await cacheInvalidate(config.storyblok, invalidatedStory)
+  }
 }
 
 const seedDatabase = async (db, config) => {

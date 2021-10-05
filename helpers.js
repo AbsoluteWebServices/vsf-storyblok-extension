@@ -66,12 +66,15 @@ export const getCacheTag = (story) => {
 }
 
 export const transformStory = (story = {}) => {
-  story.content = JSON.stringify(story.content)
-  story.full_slug = story.full_slug.replace(/^\/|\/$/g, '')
-  story.cache_tag = getCacheTag(story)
+  const storyParams = {
+    content: JSON.stringify(story.content),
+    full_slug:  story.full_slug.replace(/^\/|\/$/g, ''),
+    cache_tag: getCacheTag(story)
+  }
+  const transformedStory = Object.assign({}, story, storyParams)
   return {
     ...transformId(story.id),
-    body: story
+    body: transformedStory
   }
 }
 

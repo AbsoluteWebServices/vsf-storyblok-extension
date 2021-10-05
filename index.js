@@ -15,7 +15,7 @@ module.exports = ({ config }) => {
 
   setConfig(config)
   initStoryblokClient(config)
-  
+
 
   api.get('/story/', async (req, res) => {
     const story = await getStory(db, 'home')
@@ -44,7 +44,8 @@ module.exports = ({ config }) => {
 
   api.post('/hook', protectRoute(config), async (req, res) => {
     try {
-      await handleHook(db, config, req.body)
+      const { invalidate = false } = req.query
+      await handleHook(db, config, req.body, invalidate)
       apiStatus(res)
     } catch (error) {
       apiStatus(res, {
