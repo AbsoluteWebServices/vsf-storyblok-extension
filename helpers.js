@@ -141,12 +141,11 @@ export const log = (string) => {
 
 export const cacheInvalidate = async (config, story = null) => {
   if (config.invalidate) {
-    const url = config.invalidate
+    let url = config.invalidate
     if (story && story.cache_tag) {
-      const queryParams = new URLSearchParams(url)
-      queryParams.set('tag', story.cache_tag)
+      url += story.cache_tag;
     }
-    log(`Invalidating cache... (${config.invalidate})`)
+    log(`Invalidating cache... (${url})`)
     await rp({ uri: url })
     log('Invalidated cache ✅')
   }
