@@ -142,8 +142,8 @@ export const log = (string) => {
 export const cacheInvalidate = async (config, story = null) => {
   if (config.invalidate) {
     let url = config.invalidate
-    if (story && story.cache_tag) {
-      url += story.cache_tag;
+    if (story && story.body.cache_tag) {
+      url += story.body.cache_tag;
     }
     log(`Invalidating cache... (${url})`)
     await rp({ uri: url })
