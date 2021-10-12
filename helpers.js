@@ -61,12 +61,20 @@ export const transformId = (id) => {
   }
 }
 
-export const transformStory = ({ id, ...story } = {}) => {
-  story.content = JSON.stringify(story.content)
-  story.full_slug = story.full_slug.replace(/^\/|\/$/g, '')
+export const getCacheTag = (story) => {
+  return story.id ? `SB${story.id}` : ''
+}
+
+export const transformStory = (story = {}) => {
+  const storyParams = {
+    content: JSON.stringify(story.content),
+    full_slug:  story.full_slug.replace(/^\/|\/$/g, ''),
+    cache_tag: getCacheTag(story)
+  }
+  const transformedStory = Object.assign({}, story, storyParams)
   return {
-    ...transformId(id),
-    body: story
+    ...transformId(story.id),
+    body: transformedStory
   }
 }
 
@@ -131,12 +139,14 @@ export const log = (string) => {
   console.log('📖 : ' + string) // eslint-disable-line no-console
 }
 
-export const cacheInvalidate = async () => {
+export const cacheInvalidate = async (config, story = null) => {
   if (config.invalidate) {
-    log(`Invalidating cache... (${config.invalidate})`)
-    await rp({
-      uri: config.invalidate
-    })
+    let url = config.invalidate
+    if (story && story.body.cache_tag) {
+      url += story.body.cache_tag;
+    }
+    log(`Invalidating cache... (${url})`)
+    await rp({ uri: url })
     log('Invalidated cache ✅')
   }
 }
